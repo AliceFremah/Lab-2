@@ -1,0 +1,36 @@
+{
+  "name": "orangehrm-playwright-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end testing framework for OrangeHRM using Playwright",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test --reporter=html",
+    "test:essential": "playwright test --reporter=html",
+    "test:smoke": "playwright test --grep @smoke --reporter=line",
+    "test:quick": "playwright test --reporter=line",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:full-suite": "playwright test tests/ --reporter=html",
+    "allure:generate": "allure generate ./allure-results --clean",
+    "allure:serve": "allure serve ./allure-results"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "orangehrm",
+    "typescript"
+  ],
+  "author": "Alice Fremah Boakye",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.0",
+    "@faker-js/faker": "^8.2.0",
+    "allure-playwright": "^2.9.0",
+    "allure-commandline": "^2.24.1"
+  },
+  "dependencies": {}
+}
