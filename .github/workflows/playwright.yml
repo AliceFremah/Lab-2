@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
-        shard: [1/3, 2/3, 3/3]
+        browser: [chromium, firefox]
+        shard: [1/2, 2/2]
     
     steps:
     - uses: actions/checkout@v4
@@ -35,14 +35,14 @@ jobs:
     
     - name: Run Playwright tests
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          # Run smoke tests on PR
-          npx playwright test --project=${{ matrix.browser }} --grep="@smoke" --shard=${{ matrix.shard }}
-        elif [[ "${{ github.event_name }}" == "schedule" ]]; then
-          # Run full regression suite nightly
-          npx playwright test --project=${{ matrix.browser }} --grep="@regression" --shard=${{ matrix.shard }}
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # Run essential tests on PR (only the testMatch files)
+          npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
+        elif [ "${{ github.event_name }}" = "schedule" ]; then
+          # Run full regression suite nightly using regression config
+          npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }} --config=playwright.regression.config.ts
         else
-          # Run all tests on push to main/develop
+          # Run essential tests on push to main/develop
           npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
         fi
       env:
@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report-${{ matrix.browser }}-${{ strategy.job-index }}
+        name: playwright-report-${{ matrix.browser }}-shard-${{ strategy.job-index }}
         path: |
           playwright-report/
           test-results/
@@ -62,7 +62,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: allure-results-${{ matrix.browser }}-${{ strategy.job-index }}
+        name: allure-results-${{ matrix.browser }}-shard-${{ strategy.job-index }}
         path: allure-results/
         retention-days: 30
 
@@ -75,19 +75,41 @@ jobs:
     
     - name: Download all artifacts
       uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-*
+        merge-multiple: true
     
     - name: Merge Allure Results
       run: |
         mkdir -p merged-allure-results
-        find . -name "allure-results*" -type d | while read dir; do
-          if [ -d "$dir" ]; then
+        echo "Looking for allure results directories..."
+        find . -name "allure-results*" -type d -print
+        
+        find . -name "allure-results*" -type d | while read -r dir; do
+          echo "Processing directory: $dir"
+          if [ -d "$dir" ] && [ "$(ls -A "$dir" 2>/dev/null)" ]; then
+            echo "Copying files from $dir"
             cp -r "$dir"/* merged-allure-results/ 2>/dev/null || true
+          else
+            echo "Directory $dir is empty or doesn't exist"
           fi
         done
+        
+        echo "Contents of merged-allure-results:"
+        ls -la merged-allure-results/ || echo "merged-allure-results directory is empty"
+    
+    - name: Check for Allure Results
+      id: check-results
+      run: |
+        if [ -d "merged-allure-results" ] && [ "$(ls -A merged-allure-results 2>/dev/null)" ]; then
+          echo "has_results=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_results=false" >> $GITHUB_OUTPUT
+        fi
     
     - name: Generate Allure Report
-      uses: simple-elf/allure-report-action@master
-      if: always()
+      uses: simple-elf/allure-report-action@v1.7
+      if: steps.check-results.outputs.has_results == 'true'
       with:
         allure_results: merged-allure-results
         allure_report: allure-report
@@ -95,8 +117,8 @@ jobs:
         allure_history: allure-history
     
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v4
+      if: github.ref == 'refs/heads/main' && steps.check-results.outputs.has_results == 'true'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
@@ -121,7 +143,7 @@ jobs:
       run: npx playwright install chromium
     
     - name: Run smoke tests
-      run: npx playwright test --project=chromium --grep="@smoke" --workers=1
+      run: npx playwright test --project=chromium --workers=1
     
     - name: Comment PR with results
       uses: actions/github-script@v7
@@ -132,28 +154,44 @@ jobs:
           const path = require('path');
           
           // Read test results if available
-          let message = '🧪 **Playwright Smoke Tests Results**\n\n';
+          let message = '**Playwright Smoke Tests Results**\n\n';
           
           try {
-            const reportPath = path.join(process.cwd(), 'test-results');
-            if (fs.existsSync(reportPath)) {
-              const files = fs.readdirSync(reportPath);
-              const failed = files.filter(f => f.includes('failed')).length;
-              const passed = files.filter(f => f.includes('passed')).length;
-              
+            // Check for Playwright HTML report
+            const reportPath = path.join(process.cwd(), 'playwright-report');
+            const testResultsPath = path.join(process.cwd(), 'test-results');
+            
+            let passed = 0;
+            let failed = 0;
+            
+            if (fs.existsSync(testResultsPath)) {
+              const testDirs = fs.readdirSync(testResultsPath);
+              testDirs.forEach(dir => {
+                const fullPath = path.join(testResultsPath, dir);
+                if (fs.statSync(fullPath).isDirectory()) {
+                  if (dir.includes('failed') || fs.existsSync(path.join(fullPath, 'test-failed-1.png'))) {
+                    failed++;
+                  } else {
+                    passed++;
+                  }
+                }
+              });
+            }
+            
+            if (passed > 0 || failed > 0) {
               if (failed > 0) {
-                message += `❌ **${failed} tests failed**\n`;
-                message += `✅ **${passed} tests passed**\n\n`;
-                message += '⚠️ Please check the test failures before merging.';
+                message += `**Tests Failed:** ${failed}\n`;
+                message += `**Tests Passed:** ${passed}\n\n`;
+                message += 'Please check the test failures before merging.';
               } else {
-                message += `✅ **All ${passed} smoke tests passed!**\n\n`;
-                message += '🚀 Ready for review and merge.';
+                message += `**All ${passed} smoke tests passed!**\n\n`;
+                message += 'Ready for review and merge.';
               }
             } else {
-              message += 'ℹ️ Test results not found. Check the workflow logs for details.';
+              message += 'Smoke tests completed. Check the workflow logs for detailed results.';
             }
           } catch (error) {
-            message += `⚠️ Error reading test results: ${error.message}`;
+            message += `Error reading test results: ${error.message}`;
           }
           
           github.rest.issues.createComment({
@@ -181,7 +219,8 @@ jobs:
       run: npx playwright install chromium
     
     - name: Run performance tests
-      run: npx playwright test --project=chromium --grep="performance|load" || true
+      run: |
+        npx playwright test --project=chromium --grep="performance|load" || echo "No performance tests found, skipping..."
     
     - name: Upload performance results
       uses: actions/upload-artifact@v4

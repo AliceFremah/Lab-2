@@ -2,7 +2,7 @@
 
 A comprehensive end-to-end testing framework for OrangeHRM using Playwright with TypeScript.
 
-## 🎯 Project Overview
+## Project Overview
 
 This framework provides automated testing for OrangeHRM's core HR workflows including:
 - **Authentication** (Admin, ESS, Manager roles)
@@ -12,7 +12,7 @@ This framework provides automated testing for OrangeHRM's core HR workflows incl
 - **Cross-browser compatibility**
 - **Visual UI validation**
 
-## 🚀 Features
+## Features
 
 - **Page Object Model (POM)** architecture
 - **Multi-role user support** (Admin, ESS, Manager)
@@ -24,7 +24,7 @@ This framework provides automated testing for OrangeHRM's core HR workflows incl
 - **Parallel test execution**
 - **Test tagging** for selective execution
 
-## 📦 Installation
+## Installation
 
 1. **Clone the repository:**
    ```bash
@@ -42,7 +42,7 @@ This framework provides automated testing for OrangeHRM's core HR workflows incl
    npx playwright install
    ```
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 ├── .github/
@@ -74,7 +74,7 @@ This framework provides automated testing for OrangeHRM's core HR workflows incl
 └── package.json                    # Dependencies & scripts
 ```
 
-## 🧪 Test Execution
+## Test Execution
 
 ### Run All Tests
 ```bash
@@ -118,7 +118,7 @@ npm run allure:serve
 npm run test:report
 ```
 
-## 🎭 Test Categories & Tags
+## Test Categories & Tags
 
 ### @smoke
 Basic functionality tests for quick feedback:
@@ -143,7 +143,7 @@ Leave management processes:
 ### @regression
 Complete test suite including all functionality and edge cases.
 
-## 👥 User Roles & Test Data
+## User Roles & Test Data
 
 The framework supports three main user roles:
 
@@ -162,7 +162,7 @@ The framework supports three main user roles:
 - **Password:** manager01Pass
 - **Capabilities:** Team management, leave approvals, reports access
 
-## 🔄 End-to-End Scenarios
+## End-to-End Scenarios
 
 ### Scenario A: Employee Lifecycle
 1. Admin creates new employee with login credentials
@@ -192,7 +192,7 @@ The framework supports three main user roles:
 3. Checks color scheme and branding consistency
 4. Measures page load performance
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 Create a `.env` file for environment-specific configurations:
@@ -216,7 +216,7 @@ Key settings in `playwright.config.ts`:
 - **Videos:** Retain on failure
 - **Traces:** On first retry
 
-## 📊 CI/CD Integration
+## CI/CD Integration
 
 ### GitHub Actions Workflow
 - **Pull Requests:** Smoke tests for quick feedback
@@ -232,7 +232,7 @@ Key settings in `playwright.config.ts`:
 3. **Publish Report:** Merge results and generate reports
 4. **Performance Test:** Nightly performance validation
 
-## 🐛 Debugging & Troubleshooting
+## Debugging & Troubleshooting
 
 ### Common Issues
 
@@ -254,7 +254,7 @@ Key settings in `playwright.config.ts`:
 - Enable trace viewer for detailed execution analysis
 - Check screenshots and videos in test results
 
-## 📈 Reporting & Analytics
+## Reporting & Analytics
 
 ### Allure Reports
 Rich test reporting with:
@@ -272,7 +272,7 @@ Built-in reporting featuring:
 - Video recordings
 - Network activity logs
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork the repository**
 2. **Create a feature branch:** `git checkout -b feature/new-test-suite`
@@ -291,7 +291,7 @@ Built-in reporting featuring:
 5. **Update documentation** for new features
 6. **Submit pull request** with clear description
 
-## 📝 Best Practices
+## Best Practices
 
 ### Test Design
 - Use Page Object Model for maintainability
@@ -311,7 +311,7 @@ Built-in reporting featuring:
 - Monitor test execution times
 - Review and update browser compatibility
 
-## 🔗 Resources
+## Resources
 
 - [Playwright Documentation](https://playwright.dev/)
 - [Allure Framework](https://docs.qameta.io/allure/)
@@ -319,11 +319,11 @@ Built-in reporting featuring:
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Faker.js Documentation](https://fakerjs.dev/)
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 📞 Support
+## Support
 
 For questions and support:
 - Create an issue in the GitHub repository
@@ -332,4 +332,4 @@ For questions and support:
 
 ---
 
-**Happy Testing! 🎭**
+**Happy Testing!**

@@ -25,12 +25,11 @@
   "author": "Alice Fremah Boakye",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "@types/node": "^20.8.0",
-    "typescript": "^5.2.0",
     "@faker-js/faker": "^8.2.0",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^20.8.0",
+    "allure-commandline": "^2.24.1",
     "allure-playwright": "^2.9.0",
-    "allure-commandline": "^2.24.1"
-  },
-  "dependencies": {}
+    "typescript": "^5.2.0"
+  }
 }
