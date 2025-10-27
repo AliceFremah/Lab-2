@@ -41,12 +41,8 @@ jobs:
         elif [ "${{ github.event_name }}" = "schedule" ]; then
           # Run full regression suite nightly using regression config
           npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }} --config=playwright.regression.config.ts
-        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          # Run smoke and performance tests on main branch
-          echo "Running smoke and performance tests on main branch"
-          npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }} --grep="@smoke|@performance" --config=playwright.regression.config.ts || npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
         else
-          # Run essential tests on push to develop or other branches
+          # Run essential tests on push to main/develop
           npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
         fi
       env:
@@ -235,62 +231,3 @@ jobs:
           performance-results/
           screenshots/
         retention-days: 7
-
-  main-branch-smoke-performance:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, firefox]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps ${{ matrix.browser }}
-    
-    - name: Run smoke tests
-      run: |
-        echo "Running smoke tests on main branch with ${{ matrix.browser }}"
-        npx playwright test --project=${{ matrix.browser }} --grep="@smoke" --config=playwright.regression.config.ts
-      continue-on-error: true
-    
-    - name: Run performance tests
-      run: |
-        echo "Running performance tests on main branch with ${{ matrix.browser }}"
-        npx playwright test --project=${{ matrix.browser }} --grep="@performance|performance|load" --config=playwright.regression.config.ts || echo "No performance tests found"
-      continue-on-error: true
-    
-    - name: Upload smoke test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: smoke-test-results-${{ matrix.browser }}
-        path: |
-          playwright-report/
-          test-results/
-          allure-results/
-        retention-days: 14
-    
-    - name: Create test summary
-      if: always()
-      run: |
-        echo "## Smoke and Performance Test Results" >> $GITHUB_STEP_SUMMARY
-        echo "**Browser:** ${{ matrix.browser }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Branch:** main" >> $GITHUB_STEP_SUMMARY
-        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        if [ -d "test-results" ]; then
-          echo "### Test Results Directory Contents:" >> $GITHUB_STEP_SUMMARY
-          ls -la test-results/ >> $GITHUB_STEP_SUMMARY || echo "No test results found" >> $GITHUB_STEP_SUMMARY
-        fi
